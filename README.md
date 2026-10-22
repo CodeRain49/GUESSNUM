@@ -163,24 +163,4 @@ flowchart LR
 
 ---
 
-## 📁 โครงสร้าง Repository
-
-```
-.
-├── README.md
-├── index.html                  # หน้าเว็บโปรเจกต์ (github.io)
-├── dashboard/
-│   └── index.html              # เว็บ Dashboard สถิติ
-├── arduino/
-│   ├── NUMDLE_receiver/
-│   │   └── NUMDLE_receiver.ino
-│   └── NUMDLE_keypad/
-│       └── NUMDLE_keypad.ino
-├── images/                     # รูปชิ้นงาน, วงจร
-└── poster/
-    └── poster.pdf              # โปสเตอร์ A1
-```
-
----
-
 Physical Computing 2026 · Faculty of Information Technology, KMITL

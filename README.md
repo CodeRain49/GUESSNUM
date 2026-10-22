@@ -15,7 +15,7 @@
 
 ## 👥 สมาชิกในกลุ่ม
 
-| <img src="URL_1" width="150" /> | <img src="URL_2" width="150" /> | <img src="URL_3" width="150" /> |
+| <img src="images/member1.jpg" width="150" /> | <img src="images/member2.jpg" width="150" /> | <img src="images/member3.jpg" width="150" /> |
 | :---: | :---: | :---: |
 | 68070028 ชวัลรัตน์ ศรีรัตน์ | 68070038 ณปภา ธุวสินธุ์ | 68070066 ธันยพร เดชพันธ์ |
 

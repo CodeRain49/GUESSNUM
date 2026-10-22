@@ -120,8 +120,6 @@ flowchart LR
 | R1, R2, R3, R4 | 10, 8, 7, 6 |
 | C1, C2, C3, C4 | 5, 4, 3, 2 |
 
-![วงจร](circuit.png)
-
 ---
 
 ## 💻 Source Code

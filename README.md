@@ -6,8 +6,8 @@
 
 | | ลิงก์ |
 |---|---|
-| 🌐 Website | https://USERNAME.github.io/REPO-NAME/ |
-| 📊 Dashboard สถิติ | https://USERNAME.github.io/REPO-NAME/dashboard/ |
+| 🌐 Website | https://CodeRain49.github.io/GUESSNUM/ |
+| 📊 Dashboard สถิติ | https://CodeRain49.github.io/GUESSNUM/dashboard/ |
 | 🎬 วิดีโอสรุปโปรเจกต์ (YouTube) | https://youtu.be/XXXXXXXX |
 | 🖼️ โปสเตอร์ A1 | [poster/poster.pdf](poster/poster.pdf) |
 

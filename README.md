@@ -71,7 +71,7 @@ GUESSNUM เป็นเกมทายเลข 5 หลักที่ผู�
 
 ```mermaid
 flowchart LR
-  K["Keypad Board<br/>UNO R4 WiFi + Keypad 4x4"] -- "guess / typing" --> B[("MQTT Broker<br/>broker.hivemq.com")]
+  S["Sender Board<br/>UNO R4 WiFi + Keypad 4x4"] -- "guess / typing" --> B[("MQTT Broker<br/>mqtt-dashboard.com")]
   B -- "guess / typing" --> R["Receiver Board<br/>LCD + RGB x5 + 7-segment"]
   R -- "game result (JSON)" --> B
   B -- "WebSocket" --> W["Web Dashboard<br/>GitHub Pages"]
@@ -81,8 +81,8 @@ flowchart LR
 
 | Topic | ผู้ส่ง → ผู้รับ | ข้อมูล |
 |---|---|---|
-| `r2n/guess` | Keypad → Receiver | เลขที่ทาย เช่น `12345` หรือคำสั่ง `NEW` |
-| `r2n/typing` | Keypad → Receiver | เลขที่กำลังพิมพ์ เช่น `123__` |
+| `r2n/guess` | Sender → Receiver | เลขที่ทาย เช่น `12345` หรือคำสั่ง `NEW` |
+| `r2n/typing` | Sender → Receiver | เลขที่กำลังพิมพ์ เช่น `123__` |
 | `r2n/game` | Receiver → Web | ผลเกมแบบ JSON (ชนะ/แพ้, เฉลย, ประวัติการทาย) |
 
 ---
@@ -94,7 +94,7 @@ flowchart LR
 | Arduino UNO R4 WiFi | 2 |
 | Keypad 4x4 | 1 |
 | ไฟ RGB LED | 5 |
-| ตัวต้านทาน 220–330 Ω | 15 |
+| ตัวต้านทาน 220 Ω | 15 |
 | จอ LCD 16x2 แบบ I2C | 1 |
 | 7-segment 4 หลัก (TM1637) | 1 |
 | Breadboard | 2 |
@@ -115,7 +115,7 @@ flowchart LR
 | 7-segment TM1637 | DIO → 0, CLK → 1 |
 | LCD I2C | SDA → A4, SCL → A5 |
 
-### การต่อขา — บอร์ดฝั่ง Keypad
+### การต่อขา — บอร์ดฝั่งส่ง (Sender)
 
 | Keypad | ขา Arduino |
 |---|---|
@@ -155,7 +155,7 @@ flowchart LR
 
 1. ลงไลบรารีตามรายการด้านบนใน Arduino IDE
 2. แก้ `WIFI_SSID`, `WIFI_PASS` และ `TOPIC_BASE` ในไฟล์ `.ino` ทั้งสองไฟล์ให้ตรงกัน
-3. อัปโหลด `NUMDLE_receiver.ino` ลงบอร์ดฝั่งรับ และ `NUMDLE_keypad.ino` ลงบอร์ดฝั่ง Keypad
+3. อัปโหลด `GUESSNUM_receiver.ino` ลงบอร์ดฝั่งรับ และ `GUESSNUM_sender.ino` ลงบอร์ดฝั่งส่ง
 4. เปิดหน้า Dashboard ตั้ง `TOPIC_GAME` ให้ตรงกับ `TOPIC_BASE` แล้วเริ่มเล่นได้เลย
 
 ---

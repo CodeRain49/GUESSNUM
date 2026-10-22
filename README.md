@@ -15,21 +15,17 @@
 
 ## 👥 สมาชิกในกลุ่ม
 
-| รหัสนักศึกษา | ชื่อ - นามสกุล | หน้าที่หลัก |
-|---|---|---|
-| 66050432 | Sunisa Thoowasin | ________ |
-| ________ | ________ | ________ |
-| ________ | ________ | ________ |
+| รหัสนักศึกษา | ชื่อ - นามสกุล |
+|---|---|
+| 68070028 | -------- |
+| 68070038 | ณปภา ธุวสินธุ์ |
+| 68070066 | ________ |
 
 ---
 
 ## 📝 บทคัดย่อ (Abstract)
 
-**ภาษาไทย**
 GUESSNUM เป็นเกมทายเลข 5 หลักที่ผู้เล่นใช้ Keypad 4x4 กดตัวเลข บอร์ด Arduino UNO R4 WiFi ฝั่ง Keypad ส่งเลขผ่านโปรโตคอล MQTT ไปยังบอร์ดฝั่งรับ ซึ่งสุ่มเฉลยไว้และตรวจคำตอบทีละหลัก ผลลัพธ์แสดงด้วยไฟ RGB 5 ดวง ได้แก่ สีเขียว (ถูกเลขและถูกตำแหน่ง) สีเหลือง (มีเลขนี้แต่ผิดตำแหน่ง) และสีแดง (ไม่มีเลขนี้) จอ LCD แสดงสถานะเกมและข้อความตอนชนะหรือแพ้ ส่วน 7-segment แสดงจำนวนครั้งที่ทายได้ที่เหลือ เมื่อจบเกม ระบบส่งผลการเล่นในรูปแบบ JSON ไปยังเว็บ Dashboard บน GitHub Pages เพื่อเก็บสถิติ เช่น จำนวนเกม อัตราการชนะ และประวัติการทายแต่ละครั้ง
-
-**English**
-GUESSNUM is a physical, Wordle-style 5-digit number guessing game. Players enter guesses on a 4x4 keypad connected to an Arduino UNO R4 WiFi, which sends them over MQTT to a second board. The receiver board holds a random answer and checks each digit. Five RGB LEDs show the result: green for the right digit in the right place, yellow for the right digit in the wrong place, and red for a digit not in the answer. An I2C LCD shows the game status, and a 4-digit 7-segment display counts the remaining tries. When a game ends, the result is published as JSON to a web dashboard on GitHub Pages that records win rate and full guess history.
 
 ---
 

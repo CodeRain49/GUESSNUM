@@ -130,8 +130,8 @@ flowchart LR
 
 | ไฟล์ | คำอธิบาย |
 |---|---|
-| [`arduino/GUESSNUM_receiver/GUESSNUM_receiver.ino`](arduino/GUESSNUM_receiver/GUESSNUM_receiver.ino) | บอร์ดฝั่งรับ: สุ่มเฉลย, ตรวจคำตอบ, คุมไฟ RGB / LCD / 7-segment, ส่งผลขึ้นเว็บ |
-| [`arduino/GUESSNUM_sender/GUESSNUM_sender.ino`](arduino/GUESSNUM_sender/GUESSNUM_sender.ino) | บอร์ดฝั่งส่ง: สแกนปุ่ม, debounce, ส่งเลขผ่าน MQTT |
+| [`GUESSNUM_receiver/GUESSNUM_receiver.ino`](GUESSNUM_receiver/GUESSNUM_receiver.ino) | บอร์ดฝั่งรับ: สุ่มเฉลย, ตรวจคำตอบ, คุมไฟ RGB / LCD / 7-segment, ส่งผลขึ้นเว็บ |
+| [`GUESSNUM_sender/GUESSNUM_sender.ino`](GUESSNUM_sender/GUESSNUM_sender.ino) | บอร์ดฝั่งส่ง: สแกนปุ่ม, debounce, ส่งเลขผ่าน MQTT |
 | [`dashboard/index.html`](dashboard/index.html) | เว็บ Dashboard รับผลเกมผ่าน MQTT WebSocket และแสดงสถิติ |
 
 ### ไลบรารีที่ใช้

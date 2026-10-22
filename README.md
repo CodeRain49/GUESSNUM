@@ -34,7 +34,7 @@ GUESSNUM เป็นเกมทายเลข 5 หลักที่ผู�
 1. ออกแบบเกมที่ใช้ input และ output จริง ได้แก่ Keypad, ไฟ RGB, LCD และ 7-segment
 2. ให้ไมโครคอนโทรลเลอร์ 2 บอร์ดสื่อสารกันแบบไร้สายผ่าน WiFi และ MQTT
 3. ส่งข้อมูลจากฮาร์ดแวร์ขึ้นเว็บ เพื่อเก็บและแสดงสถิติการเล่นแบบเรียลไทม์
-4. ฝึกแก้ปัญหาฮาร์ดแวร์จริง เช่น สัญญาณรบกวนของ Keypad และการ debounce
+4. ได้เกมที่ฝึกการคิดเชิงตรรกะ การสังเกต การวิเคราะห์ และการคาดเดาคำตอบ
 
 ---
 
@@ -81,9 +81,9 @@ flowchart LR
 
 | Topic | ผู้ส่ง → ผู้รับ | ข้อมูล |
 |---|---|---|
-| `numdle/team01/guess` | Keypad → Receiver | เลขที่ทาย เช่น `12345` หรือคำสั่ง `NEW` |
-| `numdle/team01/typing` | Keypad → Receiver | เลขที่กำลังพิมพ์ เช่น `123__` |
-| `numdle/team01/game` | Receiver → Web | ผลเกมแบบ JSON (ชนะ/แพ้, เฉลย, ประวัติการทาย) |
+| `r2n/guess` | Keypad → Receiver | เลขที่ทาย เช่น `12345` หรือคำสั่ง `NEW` |
+| `r2n/typing` | Keypad → Receiver | เลขที่กำลังพิมพ์ เช่น `123__` |
+| `r2n/game` | Receiver → Web | ผลเกมแบบ JSON (ชนะ/แพ้, เฉลย, ประวัติการทาย) |
 
 ---
 
@@ -97,7 +97,8 @@ flowchart LR
 | ตัวต้านทาน 220–330 Ω | 15 |
 | จอ LCD 16x2 แบบ I2C | 1 |
 | 7-segment 4 หลัก (TM1637) | 1 |
-| Breadboard และสายจัมเปอร์ | - |
+| Breadboard | 2 |
+| สายจัมเปอร์ | 38 |
 
 ### การต่อขา — บอร์ดฝั่งรับ (Receiver)
 
@@ -112,13 +113,13 @@ flowchart LR
 | อุปกรณ์ | ขา |
 |---|---|
 | 7-segment TM1637 | DIO → 0, CLK → 1 |
-| LCD I2C | SDA → SDA, SCL → SCL |
+| LCD I2C | SDA → A4, SCL → A5 |
 
 ### การต่อขา — บอร์ดฝั่ง Keypad
 
 | Keypad | ขา Arduino |
 |---|---|
-| R1, R2, R3, R4 | 9, 8, 7, 6 |
+| R1, R2, R3, R4 | 10, 8, 7, 6 |
 | C1, C2, C3, C4 | 5, 4, 3, 2 |
 
 ใส่รูปวงจรหรือรูปถ่ายชิ้นงานไว้ในโฟลเดอร์ `images/` แล้วแสดงด้วย `![วงจร](images/wiring.png)`
@@ -129,8 +130,8 @@ flowchart LR
 
 | ไฟล์ | คำอธิบาย |
 |---|---|
-| [`arduino/NUMDLE_receiver/NUMDLE_receiver.ino`](arduino/NUMDLE_receiver/NUMDLE_receiver.ino) | บอร์ดฝั่งรับ: สุ่มเฉลย, ตรวจคำตอบ, คุมไฟ RGB / LCD / 7-segment, ส่งผลขึ้นเว็บ |
-| [`arduino/NUMDLE_keypad/NUMDLE_keypad.ino`](arduino/NUMDLE_keypad/NUMDLE_keypad.ino) | บอร์ดฝั่ง Keypad: สแกนปุ่ม, debounce, ส่งเลขผ่าน MQTT |
+| [`arduino/GUESSNUM_receiver/GUESSNUM_receiver.ino`](arduino/GUESSNUM_receiver/GUESSNUM_receiver.ino) | บอร์ดฝั่งรับ: สุ่มเฉลย, ตรวจคำตอบ, คุมไฟ RGB / LCD / 7-segment, ส่งผลขึ้นเว็บ |
+| [`arduino/GUESSNUM_sender/GUESSNUM_sender.ino`](arduino/GUESSNUM_sender/GUESSNUM_sender.ino) | บอร์ดฝั่งส่ง: สแกนปุ่ม, debounce, ส่งเลขผ่าน MQTT |
 | [`dashboard/index.html`](dashboard/index.html) | เว็บ Dashboard รับผลเกมผ่าน MQTT WebSocket และแสดงสถิติ |
 
 ### ไลบรารีที่ใช้

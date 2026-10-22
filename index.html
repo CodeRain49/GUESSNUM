@@ -1,0 +1,2070 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GUESSNUM | Physical Computing Project 2026</title>
+  <meta name="description" content="GUESSNUM — เกมทายเลข 5 หลักแบบจับต้องได้ ด้วย Arduino UNO R4 WiFi, MQTT และเว็บเก็บสถิติ" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Mitr:wght@400;500;600&family=IBM+Plex+Sans+Thai:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" />
+
+  <style>
+    :root {
+      --bg: #fbf7f0;
+      --card: #ffffff;
+      --ink: #23201c;
+      --muted: #6f6a62;
+      --line: #ece5d8;
+      --green: #4caf50;
+      --yellow: #d6ad21;
+      --red: #d9534f;
+      --accent: #2b2622;
+      --soft-green: #e8f5e9;
+      --soft-yellow: #fbf3d6;
+      --soft-red: #fbe7e6;
+      --radius: 18px;
+      --shadow: 0 6px 24px rgba(60, 40, 10, 0.07);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--ink);
+      font-family: "IBM Plex Sans Thai", system-ui, sans-serif;
+      line-height: 1.75;
+      font-size: 16px;
+    }
+
+    h1, h2, h3, .brand { font-family: "Mitr", "IBM Plex Sans Thai", sans-serif; font-weight: 500; line-height: 1.3; }
+
+    a { color: inherit; }
+
+    code, pre, .mono { font-family: "JetBrains Mono", ui-monospace, monospace; }
+
+    .wrap { max-width: 1040px; margin: 0 auto; padding: 0 20px; }
+
+    /* ---------- nav ---------- */
+    nav {
+      position: sticky; top: 0; z-index: 10;
+      background: rgba(251, 247, 240, 0.92);
+      backdrop-filter: blur(8px);
+      border-bottom: 1px solid var(--line);
+    }
+    nav .wrap { display: flex; align-items: center; gap: 18px; height: 58px; }
+    nav .brand { font-size: 20px; text-decoration: none; display: flex; align-items: center; gap: 8px; }
+    nav .brand i { display: inline-block; width: 12px; height: 12px; border-radius: 3px; }
+    nav ul { list-style: none; display: flex; gap: 18px; margin-left: auto; overflow-x: auto; scrollbar-width: none; }
+    nav ul::-webkit-scrollbar { display: none; }
+    nav ul a { text-decoration: none; color: var(--muted); font-size: 14px; white-space: nowrap; }
+    nav ul a:hover { color: var(--ink); }
+
+    /* ---------- hero ---------- */
+    header.hero { padding: 64px 0 40px; text-align: center; }
+    .course {
+      display: inline-block;
+      font-family: "Mitr", sans-serif;
+      font-size: 14px;
+      letter-spacing: 0.04em;
+      background: var(--accent);
+      color: #fff;
+      padding: 6px 16px;
+      border-radius: 999px;
+      margin-bottom: 26px;
+    }
+    .hero h1 { font-size: clamp(44px, 9vw, 84px); letter-spacing: 0.04em; }
+    .hero p.tag { color: var(--muted); font-size: 18px; margin-top: 8px; }
+
+    .tiles { display: flex; justify-content: center; gap: 10px; margin: 34px 0 30px; perspective: 600px; }
+    .tile {
+      width: clamp(48px, 12vw, 70px);
+      aspect-ratio: 1;
+      border-radius: 14px;
+      display: grid; place-items: center;
+      font-family: "Mitr", sans-serif;
+      font-size: clamp(24px, 6vw, 36px);
+      color: #fff;
+      background: #cfc7b9;
+      transition: background 0.35s ease;
+      box-shadow: inset 0 -4px 0 rgba(0,0,0,0.12);
+    }
+    .tile.flip { animation: flip 0.5s ease; }
+    @keyframes flip { 0% { transform: rotateX(0); } 50% { transform: rotateX(90deg); } 100% { transform: rotateX(0); } }
+    .tile.g { background: var(--green); }
+    .tile.y { background: var(--yellow); }
+    .tile.r { background: var(--red); }
+
+    .btns { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; }
+    .btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      text-decoration: none;
+      padding: 10px 18px;
+      border-radius: 12px;
+      background: var(--card);
+      border: 1px solid var(--line);
+      font-size: 15px;
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+    .btn:hover { transform: translateY(-2px); box-shadow: var(--shadow); }
+    .btn.dark { background: var(--accent); color: #fff; border-color: var(--accent); }
+    .btn.todo { opacity: 0.55; }
+
+    /* ---------- sections ---------- */
+    section { padding: 44px 0; }
+    .eyebrow { font-family: "Mitr", sans-serif; font-size: 13px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
+    section h2 { font-size: clamp(26px, 4.5vw, 34px); margin: 4px 0 20px; }
+    section h3 { font-size: 20px; margin-bottom: 10px; }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 26px;
+      box-shadow: var(--shadow);
+    }
+
+    .grid { display: grid; gap: 18px; }
+    .g2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .g3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .g4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+
+    /* members */
+    .member { text-align: center; }
+    .avatar {
+      width: 84px; height: 84px; border-radius: 50%;
+      margin: 0 auto 14px;
+      display: grid; place-items: center;
+      font-family: "Mitr", sans-serif; font-size: 30px; color: #fff;
+      overflow: hidden;
+    }
+    .avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .member .name { font-family: "Mitr", sans-serif; font-size: 18px; }
+    .member .sid { color: var(--muted); font-size: 14px; }
+    .member .role { display: inline-block; margin-top: 10px; font-size: 13px; padding: 3px 12px; border-radius: 999px; background: var(--bg); border: 1px solid var(--line); }
+
+    /* abstract */
+    .tabs { display: inline-flex; gap: 4px; background: var(--bg); border: 1px solid var(--line); border-radius: 12px; padding: 4px; margin-bottom: 18px; }
+    .tabs button {
+      font: inherit; font-size: 14px;
+      border: 0; background: transparent; color: var(--muted);
+      padding: 6px 16px; border-radius: 9px; cursor: pointer;
+    }
+    .tabs button.on { background: var(--card); color: var(--ink); box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
+    .abstract p { font-size: 17px; }
+    .abstract p[hidden] { display: none; }
+
+    /* objectives */
+    .obj { display: flex; gap: 14px; align-items: flex-start; }
+    .obj .num {
+      flex: none; width: 36px; height: 36px; border-radius: 10px;
+      display: grid; place-items: center;
+      font-family: "Mitr", sans-serif; color: #fff;
+    }
+
+    /* how to play */
+    .legend { display: grid; gap: 12px; }
+    .legend div { display: flex; align-items: center; gap: 14px; padding: 12px 14px; border-radius: 12px; }
+    .legend .sw { flex: none; width: 40px; height: 40px; border-radius: 10px; display: grid; place-items: center; color: #fff; font-family: "Mitr", sans-serif; font-size: 20px; }
+    .steps { counter-reset: s; list-style: none; display: grid; gap: 12px; }
+    .steps li { counter-increment: s; display: flex; gap: 12px; }
+    .steps li::before {
+      content: counter(s);
+      flex: none; width: 28px; height: 28px; border-radius: 50%;
+      background: var(--accent); color: #fff;
+      display: grid; place-items: center;
+      font-family: "Mitr", sans-serif; font-size: 14px; margin-top: 2px;
+    }
+
+    .example { margin-top: 18px; padding-top: 18px; border-top: 1px dashed var(--line); }
+    .example .row { display: flex; align-items: center; gap: 8px; margin: 8px 0; flex-wrap: wrap; }
+    .example .row .lbl { width: 74px; font-size: 14px; color: var(--muted); }
+    .mini { width: 36px; height: 36px; border-radius: 8px; display: grid; place-items: center; color: #fff; font-family: "Mitr", sans-serif; background: #cfc7b9; }
+    .mini.g { background: var(--green); } .mini.y { background: var(--yellow); } .mini.r { background: var(--red); }
+
+    .keys { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; max-width: 260px; }
+    .keys span {
+      aspect-ratio: 1; border-radius: 10px;
+      display: grid; place-items: center;
+      background: var(--bg); border: 1px solid var(--line);
+      font-family: "Mitr", sans-serif; font-size: 18px;
+      box-shadow: inset 0 -3px 0 var(--line);
+    }
+    .keys span.fn { background: var(--accent); color: #fff; border-color: var(--accent); box-shadow: none; }
+    .keys span.off { opacity: 0.35; }
+    .keymap { display: grid; grid-template-columns: auto 1fr; gap: 6px 14px; font-size: 15px; align-content: start; }
+    .keymap b { font-family: "JetBrains Mono", monospace; }
+
+    /* video / photo */
+    .media { aspect-ratio: 16 / 9; border-radius: var(--radius); overflow: hidden; background: #2b2622; display: grid; place-items: center; color: #d9d2c4; text-align: center; padding: 20px; }
+    .media iframe, .media img { width: 100%; height: 100%; border: 0; object-fit: cover; }
+
+    /* architecture */
+    .arch { display: grid; grid-template-columns: 1fr auto 1fr auto 1fr; align-items: center; gap: 10px; }
+    .node { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 18px; box-shadow: var(--shadow); }
+    .node h3 { font-size: 17px; margin-bottom: 6px; }
+    .node ul { list-style: none; font-size: 14px; color: var(--muted); }
+    .node ul li::before { content: "• "; }
+    .node.broker { text-align: center; background: var(--accent); color: #fff; border-color: var(--accent); }
+    .node.broker p { font-size: 13px; opacity: 0.8; }
+    .arrow { font-size: 13px; color: var(--muted); text-align: center; line-height: 1.4; }
+    .arrow .ar { font-size: 22px; color: var(--ink); display: block; }
+    .web-node { margin: 14px auto 0; max-width: 320px; text-align: center; }
+    .down { text-align: center; color: var(--muted); font-size: 13px; margin-top: 12px; }
+
+    /* tables */
+    .tbl { width: 100%; border-collapse: collapse; font-size: 15px; }
+    .tbl th, .tbl td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+    .tbl th { color: var(--muted); font-weight: 500; font-size: 14px; }
+    .tbl tr:last-child td { border-bottom: 0; }
+    .tbl code { font-size: 13px; background: var(--bg); padding: 2px 6px; border-radius: 6px; white-space: nowrap; }
+    .pin { display: inline-block; min-width: 34px; text-align: center; font-family: "JetBrains Mono", monospace; font-size: 13px; padding: 2px 6px; border-radius: 6px; }
+    .pin.r { background: var(--soft-red); color: #a23a36; }
+    .pin.g { background: var(--soft-green); color: #2e7a32; }
+    .pin.b { background: #e5edfb; color: #2f57a4; }
+    .scroll { overflow-x: auto; }
+    .scroll .tbl { min-width: 520px; }
+
+    /* highlights */
+    .hl .icon { font-size: 26px; margin-bottom: 8px; }
+    .hl p { color: var(--muted); font-size: 15px; }
+
+    /* code */
+    .code-tabs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
+    .code-tabs button {
+      font: inherit; font-size: 14px;
+      padding: 8px 14px; border-radius: 10px;
+      border: 1px solid var(--line); background: var(--card); color: var(--muted);
+      cursor: pointer;
+    }
+    .code-tabs button.on { background: var(--accent); color: #fff; border-color: var(--accent); }
+    .code-box { border-radius: var(--radius); overflow: hidden; background: #2d2d2d; box-shadow: var(--shadow); }
+    .code-head {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 14px; background: #232323; color: #bbb; font-size: 13px;
+    }
+    .code-head .dots { display: flex; gap: 6px; }
+    .code-head .dots i { width: 11px; height: 11px; border-radius: 50%; display: block; }
+    .code-head .fname { font-family: "JetBrains Mono", monospace; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .code-head .act { margin-left: auto; display: flex; gap: 6px; flex: none; }
+    .code-head .act button, .code-head .act a {
+      font: inherit; font-size: 12px; color: #ddd; text-decoration: none;
+      background: #3a3a3a; border: 0; padding: 5px 10px; border-radius: 7px; cursor: pointer;
+    }
+    .code-head .act button:hover, .code-head .act a:hover { background: #4a4a4a; }
+    .code-pane { display: none; }
+    .code-pane.on { display: block; }
+    .code-pane pre { margin: 0; border-radius: 0; max-height: 560px; overflow: auto; padding: 16px; background: #2d2d2d; color: #ccc; font-size: 13px; line-height: 1.6; }
+    .code-desc { color: var(--muted); font-size: 15px; margin: 0 0 12px; }
+
+    pre.json { background: #2d2d2d; color: #ddd; border-radius: 12px; padding: 16px; font-size: 13px; overflow-x: auto; line-height: 1.6; }
+
+    footer { padding: 40px 0 60px; text-align: center; color: var(--muted); font-size: 14px; }
+
+    /* ---------- responsive ---------- */
+    @media (max-width: 860px) {
+      .g3, .g4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .arch { grid-template-columns: minmax(0, 1fr); }
+      .arrow .ar { transform: rotate(90deg); }
+    }
+    @media (max-width: 600px) {
+      .g2, .g3, .g4 { grid-template-columns: minmax(0, 1fr); }
+      .card { padding: 20px; }
+      nav ul { gap: 14px; }
+      header.hero { padding-top: 44px; }
+      .tiles { gap: 7px; }
+    }
+  </style>
+</head>
+
+<body>
+
+<!-- =====================================================
+     แก้ข้อมูลทั้งหมดในส่วน CONFIG ที่ท้ายไฟล์ (ลิงก์ YouTube, GitHub, โปสเตอร์)
+     ===================================================== -->
+
+<nav>
+  <div class="wrap">
+    <a class="brand" href="#top"><i style="background:var(--green)"></i>GUESSNUM</a>
+    <ul>
+      <li><a href="#abstract">บทคัดย่อ</a></li>
+      <li><a href="#play">วิธีเล่น</a></li>
+      <li><a href="#system">ระบบ</a></li>
+      <li><a href="#hardware">ฮาร์ดแวร์</a></li>
+      <li><a href="#code">Source Code</a></li>
+      <li><a href="#team">สมาชิก</a></li>
+    </ul>
+  </div>
+</nav>
+
+<header class="hero" id="top">
+  <div class="wrap">
+    <span class="course">Physical Computing Project 2026 - IT KMITL</span>
+    <h1>GUESSNUM</h1>
+    <p class="tag">เกมทายเลข 5 หลักแบบจับต้องได้ กดด้วย Keypad ดูผลด้วยไฟ RGB เก็บสถิติบนเว็บ</p>
+
+    <div class="tiles" id="heroTiles" aria-hidden="true">
+      <div class="tile">5</div><div class="tile">8</div><div class="tile">3</div><div class="tile">2</div><div class="tile">1</div>
+    </div>
+
+    <div class="btns">
+      <a class="btn dark" id="lnkDashboard" href="dashboard/">📊 Dashboard สถิติ</a>
+      <a class="btn" id="lnkVideo" href="#video">🎬 วิดีโอ</a>
+      <a class="btn" id="lnkPoster" href="poster/poster.pdf">🖼️ โปสเตอร์ A1</a>
+      <a class="btn" id="lnkRepo" href="#">💻 GitHub</a>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <!-- ================= Abstract ================= -->
+  <section id="abstract">
+    <p class="eyebrow">Abstract</p>
+    <h2>บทคัดย่อ</h2>
+    <div class="card abstract">
+      <div class="tabs" role="tablist">
+        <button class="on" data-lang="th">ภาษาไทย</button>
+        <button data-lang="en">English</button>
+      </div>
+      <p data-lang="th">
+        GUESSNUM เป็นเกมทายเลข 5 หลักที่ผู้เล่นใช้ Keypad 4x4 กดตัวเลข บอร์ด Arduino UNO R4 WiFi ฝั่ง Keypad
+        ส่งเลขผ่านโปรโตคอล MQTT ไปยังบอร์ดฝั่งรับ ซึ่งสุ่มเฉลยไว้และตรวจคำตอบทีละหลัก ผลลัพธ์แสดงด้วยไฟ RGB 5 ดวง
+        ได้แก่ สีเขียว (ถูกเลขและถูกตำแหน่ง) สีเหลือง (มีเลขนี้แต่ผิดตำแหน่ง) และสีแดง (ไม่มีเลขนี้)
+        จอ LCD แสดงสถานะเกมและข้อความตอนชนะหรือแพ้ ส่วน 7-segment แสดงจำนวนครั้งที่ทายได้ที่เหลือ
+        เมื่อจบเกม ระบบส่งผลการเล่นในรูปแบบ JSON ไปยังเว็บ Dashboard บน GitHub Pages
+        เพื่อเก็บสถิติ เช่น จำนวนเกม อัตราการชนะ และประวัติการทายแต่ละครั้ง
+      </p>
+      <p data-lang="en" hidden>
+        GUESSNUM is a physical, Wordle-style 5-digit number guessing game. Players enter guesses on a 4x4 keypad
+        connected to an Arduino UNO R4 WiFi, which sends them over MQTT to a second board. The receiver board holds
+        a random answer and checks each digit. Five RGB LEDs show the result: green for the right digit in the right
+        place, yellow for the right digit in the wrong place, and red for a digit not in the answer. An I2C LCD shows
+        the game status, and a 4-digit 7-segment display counts the remaining tries. When a game ends, the result is
+        published as JSON to a web dashboard on GitHub Pages that records the win rate and full guess history.
+      </p>
+    </div>
+  </section>
+
+  <!-- ================= Objectives ================= -->
+  <section id="objectives">
+    <p class="eyebrow">Objectives</p>
+    <h2>วัตถุประสงค์</h2>
+    <div class="grid g2">
+      <div class="card obj"><span class="num" style="background:var(--green)">1</span>
+        <p>ออกแบบเกมที่ใช้ input และ output จริง ได้แก่ Keypad, ไฟ RGB, LCD และ 7-segment</p></div>
+      <div class="card obj"><span class="num" style="background:var(--yellow)">2</span>
+        <p>ให้ไมโครคอนโทรลเลอร์ 2 บอร์ดสื่อสารกันแบบไร้สายผ่าน WiFi และ MQTT</p></div>
+      <div class="card obj"><span class="num" style="background:var(--red)">3</span>
+        <p>ส่งข้อมูลจากฮาร์ดแวร์ขึ้นเว็บ เพื่อเก็บและแสดงสถิติการเล่นแบบเรียลไทม์</p></div>
+      <div class="card obj"><span class="num" style="background:var(--accent)">4</span>
+        <p>ได้เกมที่ฝึกการคิดเชิงตรรกะ การสังเกต การวิเคราะห์ และการคาดเดาคำตอบ</p></div>
+    </div>
+  </section>
+
+  <!-- ================= How to play ================= -->
+  <section id="play">
+    <p class="eyebrow">How to play</p>
+    <h2>วิธีเล่น</h2>
+    <div class="grid g2">
+      <div class="card">
+        <h3>กติกา</h3>
+        <ol class="steps">
+          <li><span>ระบบสุ่มเลขเฉลย 5 หลัก (เลขซ้ำได้)</span></li>
+          <li><span>กดเลข 5 หลักบน Keypad แล้วกด <b>#</b> เพื่อส่ง</span></li>
+          <li><span>ไฟ RGB 5 ดวงบอกผลทีละหลัก</span></li>
+          <li><span>ทายได้ 4 ครั้ง 7-segment นับถอยหลัง 4 → 3 → 2 → 1</span></li>
+          <li><span>จบเกม LCD โชว์เฉลยค้าง 8 วินาที แล้วเริ่มเกมใหม่อัตโนมัติ</span></li>
+        </ol>
+
+        <div class="example">
+          <p class="eyebrow" style="margin-bottom:6px">ตัวอย่าง · เฉลย 58321</p>
+          <div class="row"><span class="lbl">ทาย 1</span>
+            <span class="mini y">1</span><span class="mini y">2</span><span class="mini g">3</span><span class="mini r">4</span><span class="mini y">5</span></div>
+          <div class="row"><span class="lbl">ทาย 2</span>
+            <span class="mini g">5</span><span class="mini g">8</span><span class="mini g">3</span><span class="mini g">2</span><span class="mini r">4</span></div>
+          <div class="row"><span class="lbl">ทาย 3</span>
+            <span class="mini g">5</span><span class="mini g">8</span><span class="mini g">3</span><span class="mini g">2</span><span class="mini g">1</span></div>
+        </div>
+      </div>
+
+      <div class="grid" style="gap:18px">
+        <div class="card">
+          <h3>ความหมายของสี</h3>
+          <div class="legend">
+            <div style="background:var(--soft-green)"><span class="sw" style="background:var(--green)">✓</span>ถูกเลข ถูกตำแหน่ง</div>
+            <div style="background:var(--soft-yellow)"><span class="sw" style="background:var(--yellow)">↔</span>มีเลขนี้ในเฉลย แต่ผิดตำแหน่ง</div>
+            <div style="background:var(--soft-red)"><span class="sw" style="background:var(--red)">✕</span>ไม่มีเลขนี้ในเฉลย</div>
+          </div>
+        </div>
+        <div class="card">
+          <h3>ปุ่มบน Keypad</h3>
+          <div style="display:flex; gap:22px; flex-wrap:wrap; align-items:flex-start">
+            <div class="keys" aria-hidden="true">
+              <span>1</span><span>2</span><span>3</span><span class="fn">A</span>
+              <span>4</span><span>5</span><span>6</span><span class="off">B</span>
+              <span>7</span><span>8</span><span>9</span><span class="fn">C</span>
+              <span class="fn">*</span><span>0</span><span class="fn">#</span><span class="off">D</span>
+            </div>
+            <div class="keymap">
+              <b>0–9</b><span>พิมพ์เลข</span>
+              <b>*</b><span>ลบตัวท้าย</span>
+              <b>#</b><span>ส่งคำตอบ</span>
+              <b>C</b><span>ล้างทั้งหมด</span>
+              <b>A</b><span>เริ่มเกมใหม่</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid g2" style="margin-top:18px">
+      <div class="card" style="background:var(--soft-green); border-color:#cfe8d0">
+        <h3>🎉 ชนะ</h3>
+        <p>ไฟเขียวทั้ง 5 ดวงกะพริบ · 7-segment ขึ้น <b class="mono">Good</b> · LCD ขึ้น ♥ YOU WIN!! ♥ พร้อมเฉลย</p>
+      </div>
+      <div class="card" style="background:var(--soft-red); border-color:#f1cfcd">
+        <h3>😢 แพ้</h3>
+        <p>ไฟแดงทั้ง 5 ดวงกะพริบ · 7-segment สลับ <b class="mono">LOSE</b> กับ <b class="mono">0</b> · LCD ขึ้น GAME OVER พร้อมเฉลย</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= Video + photo ================= -->
+  <section id="video">
+    <p class="eyebrow">Demo</p>
+    <h2>วิดีโอและชิ้นงาน</h2>
+    <div class="grid g2">
+      <div class="media" id="videoBox">ยังไม่ได้ใส่ลิงก์ YouTube<br><small>แก้ YOUTUBE_ID ในส่วน CONFIG ท้ายไฟล์</small></div>
+      <div class="media" id="photoBox">
+        <img src="images/device.jpg" alt="ชิ้นงาน GUESSNUM" onerror="this.parentElement.innerHTML='ใส่รูปชิ้นงานไว้ที่<br><code>images/device.jpg</code>'">
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= System ================= -->
+  <section id="system">
+    <p class="eyebrow">System overview</p>
+    <h2>ภาพรวมระบบ</h2>
+
+    <div class="arch">
+      <div class="node">
+        <h3>⌨️ Sender Board</h3>
+        <ul>
+          <li>Arduino UNO R4 WiFi</li>
+          <li>Keypad 4x4</li>
+          <li>LED matrix บนบอร์ด</li>
+        </ul>
+      </div>
+      <div class="arrow"><span class="ar">→</span>guess<br>typing</div>
+      <div class="node broker">
+        <h3>MQTT Broker</h3>
+        <p>mqtt-dashboard.com</p>
+      </div>
+      <div class="arrow"><span class="ar">⇄</span>guess / typing<br>game result</div>
+      <div class="node">
+        <h3>🎮 Receiver Board</h3>
+        <ul>
+          <li>Arduino UNO R4 WiFi</li>
+          <li>RGB LED × 5</li>
+          <li>LCD 16x2 I2C</li>
+          <li>7-segment TM1637</li>
+        </ul>
+      </div>
+    </div>
+    <p class="down">↓ ผลเกม (JSON) ผ่าน MQTT over WebSocket ↓</p>
+    <div class="node web-node">
+      <h3>📊 Web Dashboard</h3>
+      <ul style="list-style:none"><li style="list-style:none">GitHub Pages · MQTT.js</li></ul>
+    </div>
+
+    <div class="grid g2" style="margin-top:26px">
+      <div class="card">
+        <h3>MQTT Topics</h3>
+        <div class="scroll">
+          <table class="tbl">
+            <tr><th>Topic</th><th>ทิศทาง</th><th>ข้อมูล</th></tr>
+            <tr><td><code>r2n/guess</code></td><td>Sender → Receiver</td><td>เลขที่ทาย เช่น <code>12345</code> หรือ <code>NEW</code></td></tr>
+            <tr><td><code>r2n/typing</code></td><td>Sender → Receiver</td><td>เลขที่กำลังพิมพ์ เช่น <code>123__</code></td></tr>
+            <tr><td><code>r2n/game</code></td><td>Receiver → Web</td><td>ผลเกมแบบ JSON (ชนะ/แพ้, เฉลย, ประวัติการทาย)</td></tr>
+          </table>
+        </div>
+      </div>
+      <div class="card">
+        <h3>ตัวอย่างข้อมูลผลเกม</h3>
+<pre class="json">{
+  "uid": "1A2B3C4D",
+  "result": "WIN",
+  "attempts": 2,
+  "maxAttempts": 4,
+  "answer": "58321",
+  "guesses": [
+    { "number": "58324",
+      "colors": ["green","green","green","green","red"] },
+    { "number": "58321",
+      "colors": ["green","green","green","green","green"] }
+  ]
+}</pre>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= Hardware ================= -->
+  <section id="hardware">
+    <p class="eyebrow">Hardware</p>
+    <h2>อุปกรณ์และการต่อขา</h2>
+
+    <div class="grid g3">
+      <div class="card">
+        <h3>อุปกรณ์</h3>
+        <table class="tbl">
+          <tr><td>Arduino UNO R4 WiFi</td><td>2</td></tr>
+          <tr><td>Keypad 4x4</td><td>1</td></tr>
+          <tr><td>RGB LED</td><td>5</td></tr>
+          <tr><td>ตัวต้านทาน 220 Ω</td><td>15</td></tr>
+          <tr><td>LCD 16x2 I2C</td><td>1</td></tr>
+          <tr><td>7-segment TM1637</td><td>1</td></tr>
+          <tr><td>Breadboard</td><td>2</td></tr>
+          <tr><td>สายจัมเปอร์</td><td>38</td></tr>
+        </table>
+      </div>
+
+      <div class="card">
+        <h3>บอร์ดฝั่งรับ</h3>
+        <table class="tbl">
+          <tr><th>RGB</th><th>R</th><th>G</th><th>B</th></tr>
+          <tr><td>หลัก 1</td><td><span class="pin r">11</span></td><td><span class="pin g">12</span></td><td><span class="pin b">13</span></td></tr>
+          <tr><td>หลัก 2</td><td><span class="pin r">8</span></td><td><span class="pin g">9</span></td><td><span class="pin b">10</span></td></tr>
+          <tr><td>หลัก 3</td><td><span class="pin r">5</span></td><td><span class="pin g">6</span></td><td><span class="pin b">7</span></td></tr>
+          <tr><td>หลัก 4</td><td><span class="pin r">2</span></td><td><span class="pin g">3</span></td><td><span class="pin b">4</span></td></tr>
+          <tr><td>หลัก 5</td><td><span class="pin r">A2</span></td><td><span class="pin g">A1</span></td><td><span class="pin b">A0</span></td></tr>
+        </table>
+        <table class="tbl" style="margin-top:10px">
+          <tr><td>7-segment</td><td>DIO <code>0</code> · CLK <code>1</code></td></tr>
+          <tr><td>LCD I2C</td><td>SDA <code>A4</code> · SCL <code>A5</code></td></tr>
+        </table>
+      </div>
+
+      <div class="card">
+        <h3>บอร์ดฝั่งส่ง (Sender)</h3>
+        <table class="tbl">
+          <tr><th>Keypad</th><th>ขา Arduino</th></tr>
+          <tr><td>R1 · R2 · R3 · R4</td><td><code>10 · 8 · 7 · 6</code></td></tr>
+          <tr><td>C1 · C2 · C3 · C4</td><td><code>5 · 4 · 3 · 2</code></td></tr>
+        </table>
+        <p style="color:var(--muted); font-size:14px; margin-top:12px">
+          Row ตั้งเป็น <code>INPUT_PULLUP</code> และเปิด Column ทีละตัวด้วย LOW
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= Highlights ================= -->
+  <section id="highlights">
+    <p class="eyebrow">Technical highlights</p>
+    <h2>จุดเด่นทางเทคนิค</h2>
+    <div class="grid g2">
+      <div class="card hl">
+        <div class="icon">🟩</div>
+        <h3>ตรวจคำตอบแบบ Wordle</h3>
+        <p>ให้สีเขียวก่อน แล้วค่อยให้สีเหลืองตามจำนวนเลขที่เหลือในเฉลย ทำให้กรณีเลขซ้ำได้สีที่ถูกต้อง</p>
+      </div>
+      <div class="card hl">
+        <div class="icon">⌨️</div>
+        <h3>สแกน Keypad เอง</h3>
+        <p>UNO R4 ทำงานเร็ว (48 MHz) ไลบรารี Keypad.h จึงอ่านค่าก่อนสายนิ่งและได้เลขมั่ว
+          เราเขียนตัวสแกนเอง โดยรอสัญญาณนิ่ง 20 µs, debounce 30 ms, ไม่รันซ้ำตอนกดค้าง และตัดทิ้งเมื่อกดหลายปุ่มพร้อมกัน</p>
+      </div>
+      <div class="card hl">
+        <div class="icon">⏱️</div>
+        <h3>ไม่ใช้ delay() ตอนกะพริบ</h3>
+        <p>ใช้ <code>millis()</code> คุมจังหวะไฟกะพริบและการสลับหน้าจอ LCD บอร์ดจึงยังรับข้อความ MQTT ได้ตลอดเวลา</p>
+      </div>
+      <div class="card hl">
+        <div class="icon">🔁</div>
+        <h3>กันข้อมูลซ้ำบนเว็บ</h3>
+        <p>ผลเกมส่งแบบ retained พร้อม <code>uid</code> เปิดเว็บทีหลังก็ยังได้ผลล่าสุด และเว็บไม่นับเกมเดิมซ้ำ</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= Source code ================= -->
+  <section id="code">
+    <p class="eyebrow">Source code</p>
+    <h2>Source Code</h2>
+
+    <div class="code-tabs" role="tablist">
+      <button class="on" data-pane="rx">Receiver Board</button>
+      <button data-pane="kp">Sender Board</button>
+      <button data-pane="web">Web Dashboard</button>
+    </div>
+
+    <div class="code-pane on" id="pane-rx">
+      <p class="code-desc">สุ่มเฉลย ตรวจคำตอบ คุมไฟ RGB / LCD / 7-segment และส่งผลเกมขึ้นเว็บ</p>
+      <div class="code-box">
+        <div class="code-head">
+          <span class="dots"><i style="background:#ff5f57"></i><i style="background:#febc2e"></i><i style="background:#28c840"></i></span>
+          <span class="fname">GUESSNUM_receiver/GUESSNUM_receiver.ino</span>
+          <span class="act"><button data-copy="code-rx">Copy</button><a href="GUESSNUM_receiver/GUESSNUM_receiver.ino" download>Download</a></span>
+        </div>
+        <pre class="language-cpp"><code class="language-cpp" id="code-rx">/*
+  ===========================================================
+   GUESSNUM – บอร์ดฝั่งรับ (Arduino UNO R4 WiFi)
+  -----------------------------------------------------------
+   - รับเลขทาย 5 หลักจาก MQTT (ส่งมาจากบอร์ด keypad)
+   - สุ่มเฉลย 5 หลัก แล้วเช็คทีละตำแหน่ง -&gt; แสดงสีบน RGB 5 ดวง
+       เขียว = ถูกเลข ถูกตำแหน่ง
+       เหลือง = มีเลขนี้ในเฉลย แต่ผิดตำแหน่ง
+       แดง   = ไม่มีเลขนี้ในเฉลย
+   - LCD I2C 16x2 : สถานะเกม + หน้าจอชนะ/แพ้แบบน่ารัก
+   - 7-segment TM1637 : จำนวนครั้งที่เหลือ 4 -&gt; 0
+   - LCD โชว์เลขที่กำลังพิมพ์จาก keypad (topic /typing)
+   - จบเกมแล้วส่งผลเป็น JSON ไปที่ MQTT ให้เว็บเก็บสถิติ
+  -----------------------------------------------------------
+   ไลบรารีที่ต้องลง (Sketch &gt; Include Library &gt; Manage Libraries)
+   - ArduinoMqttClient   (by Arduino)
+   - LiquidCrystal I2C   (by Frank de Brabander)
+   - TM1637              (by Avishay Orpaz)
+   * WiFiS3 มากับบอร์ด UNO R4 WiFi อยู่แล้ว
+  ===========================================================
+*/
+
+#include &lt;WiFiS3.h&gt;
+#include &lt;ArduinoMqttClient.h&gt;
+#include &lt;Wire.h&gt;
+#include &lt;LiquidCrystal_I2C.h&gt;
+#include &lt;TM1637Display.h&gt;
+#include &lt;ctype.h&gt;
+
+// ================= ตั้งค่า WiFi / MQTT =================
+const char WIFI_SSID[]   = "YOUR_WIFI_NAME";
+const char WIFI_PASS[]   = "YOUR_WIFI_PASS";
+const char MQTT_BROKER[] = "mqtt-dashboard.com";
+const int  MQTT_PORT     = 1883;
+
+// ต้องตั้งให้ตรงกันทั้งบอร์ด keypad และหน้าเว็บ
+#define TOPIC_BASE "r2n"
+const char TOPIC_GUESS[] = TOPIC_BASE "/guess";  // keypad -&gt; บอร์ดนี้ : "12345" หรือ "NEW"
+const char TOPIC_GAME[]  = TOPIC_BASE "/game";   // บอร์ดนี้ -&gt; เว็บ   : JSON ผลเกม
+const char TOPIC_TYPING[] = TOPIC_BASE "/typing"; // keypad -&gt; บอร์ดนี้ : "123__" เลขที่กำลังพิมพ์
+
+// ================= ฮาร์ดแวร์ =================
+#define COMMON_ANODE true   // ถ้า RGB เป็นแบบขาร่วมไฟบวก (common anode) เปลี่ยนเป็น true
+
+const uint8_t LED_PIN[5][3] = {   // {R, G, B}
+  {11, 12, 13},   // หลัก 1
+  { 8,  9, 10},   // หลัก 2
+  { 5,  6,  7},   // หลัก 3
+  { 2,  3,  4},   // หลัก 4
+  {A2, A1, A0}    // หลัก 5
+};
+
+#define SEG_CLK 1
+#define SEG_DIO 0
+TM1637Display seg(SEG_CLK, SEG_DIO);
+
+LiquidCrystal_I2C lcd(0x27, 16, 2);   // ถ้าจอไม่ขึ้นตัวหนังสือ ลองเปลี่ยนเป็น 0x3F
+
+// ================= กติกา / เวลา =================
+const uint8_t MAX_TRIES = 4;                // ทายได้ 4 ครั้ง -&gt; 7seg โชว์ 4,3,2,1 แพ้แล้วเป็น 0
+const unsigned long REVEAL_MS     = 2000;   // โชว์สีของตาสุดท้ายค้างไว้ก่อนเริ่มกะพริบ
+const unsigned long BLINK_MS      = 600;    // จังหวะกะพริบ (ช้า ๆ สบายตา)
+const unsigned long FRAME_MS      = 2400;   // สลับหน้าจอ LCD ตอนจบเกม
+const unsigned long END_SCREEN_MS = 8000;   // โชว์เฉลยค้าง 8 วิ แล้วเริ่มเกมใหม่อัตโนมัติ
+
+// ================= ตัวอักษรพิเศษบน LCD =================
+byte chHeart[8] = {0b00000,0b01010,0b11111,0b11111,0b01110,0b00100,0b00000,0b00000};
+byte chSmile[8] = {0b00000,0b01010,0b01010,0b00000,0b10001,0b01110,0b00000,0b00000};
+byte chSad[8]   = {0b00000,0b01010,0b01010,0b00000,0b01110,0b10001,0b00000,0b00000};
+byte chStar[8]  = {0b00100,0b10101,0b01110,0b11111,0b01110,0b10101,0b00100,0b00000};
+byte chNote[8]  = {0b00010,0b00011,0b00010,0b00010,0b01110,0b11110,0b01100,0b00000};
+byte chTear[8]  = {0b00100,0b00100,0b01010,0b01010,0b10001,0b10001,0b01110,0b00000};
+
+#define HEART "\x01"
+#define SMILE "\x02"
+#define SAD   "\x03"
+#define STAR  "\x04"
+#define NOTE  "\x05"
+#define TEAR  "\x06"
+
+// ================= คำบน 7-segment =================
+const uint8_t SEG_GOOD[] = {
+  SEG_A | SEG_C | SEG_D | SEG_E | SEG_F,          // G
+  SEG_C | SEG_D | SEG_E | SEG_G,                  // o
+  SEG_C | SEG_D | SEG_E | SEG_G,                  // o
+  SEG_B | SEG_C | SEG_D | SEG_E | SEG_G           // d
+};
+const uint8_t SEG_LOSE[] = {
+  SEG_D | SEG_E | SEG_F,                          // L
+  SEG_A | SEG_B | SEG_C | SEG_D | SEG_E | SEG_F,  // O
+  SEG_A | SEG_C | SEG_D | SEG_F | SEG_G,          // S
+  SEG_A | SEG_D | SEG_E | SEG_F | SEG_G           // E
+};
+
+// ================= สถานะเกม =================
+enum LedColor : uint8_t { C_OFF, C_RED, C_YELLOW, C_GREEN };
+const char *COLOR_NAME[] = { "off", "red", "yellow", "green" };
+
+enum GameState { PLAYING, WON, LOST };
+GameState state = PLAYING;
+
+char     answer[6];
+char     gameUid[9];
+uint8_t  triesUsed = 0;
+char     guessLog[MAX_TRIES][6];
+LedColor colorLog[MAX_TRIES][5];
+
+unsigned long endAt = 0, lastBlink = 0;
+bool   blinkOn  = false;
+int8_t lcdFrame = -1;
+
+WiFiClient wifiClient;
+MqttClient mqttClient(wifiClient);
+
+// =====================================================
+//                      LED / จอ
+// =====================================================
+void writeLedPin(uint8_t pin, bool on) {
+  digitalWrite(pin, (on != COMMON_ANODE) ? HIGH : LOW);
+}
+
+void setLed(uint8_t i, LedColor c) {
+  writeLedPin(LED_PIN[i][0], c == C_RED   || c == C_YELLOW);  // R
+  writeLedPin(LED_PIN[i][1], c == C_GREEN || c == C_YELLOW);  // G
+  writeLedPin(LED_PIN[i][2], false);                          // B (ไม่ใช้)
+}
+
+void allLeds(LedColor c) {
+  for (uint8_t i = 0; i &lt; 5; i++) setLed(i, c);
+}
+
+// พิมพ์ 1 บรรทัดเต็ม 16 ช่อง (เติมช่องว่างลบของเก่า)
+void lcdLine(uint8_t row, const char *text) {
+  lcd.setCursor(0, row);
+  uint8_t n = 0;
+  while (text[n] &amp;&amp; n &lt; 16) { lcd.write((uint8_t)text[n]); n++; }
+  while (n &lt; 16) { lcd.write(' '); n++; }
+}
+
+// =====================================================
+//                      ตัวเกม
+// =====================================================
+void newGame() {
+  for (uint8_t i = 0; i &lt; 5; i++) answer[i] = '0' + random(10);
+  answer[5] = '\0';
+  snprintf(gameUid, sizeof(gameUid), "%08lX", (unsigned long)random(0x7FFFFFFF));
+
+  triesUsed = 0;
+  state = PLAYING;
+  allLeds(C_OFF);
+  seg.showNumberDec(MAX_TRIES);
+
+  lcdLine(0, " " STAR " GUESSNUM " STAR " " NOTE);
+  lcdLine(1, " Guess 5 digit " SMILE);
+
+  Serial.print(F("\n[NEW GAME] answer = "));   // ไว้เทส ตอนพรีเซนต์จริงลบออกได้
+  Serial.println(answer);
+}
+
+// เช็คแบบ Wordle: เขียวก่อน แล้วค่อยแจกเหลืองตามจำนวนเลขที่เหลือในเฉลย
+void checkGuess(const char *g, LedColor res[5]) {
+  uint8_t remain[10] = {0};
+  for (uint8_t i = 0; i &lt; 5; i++) {
+    if (g[i] == answer[i]) res[i] = C_GREEN;
+    else { res[i] = C_RED; remain[answer[i] - '0']++; }
+  }
+  for (uint8_t i = 0; i &lt; 5; i++) {
+    if (res[i] == C_GREEN) continue;
+    uint8_t d = g[i] - '0';
+    if (remain[d] &gt; 0) { res[i] = C_YELLOW; remain[d]--; }
+  }
+}
+
+void handleGuess(const char *g) {
+  LedColor res[5];
+  checkGuess(g, res);
+
+  strcpy(guessLog[triesUsed], g);
+  memcpy(colorLog[triesUsed], res, sizeof(res));
+  triesUsed++;
+
+  bool win = true;
+  for (uint8_t i = 0; i &lt; 5; i++) {
+    setLed(i, res[i]);
+    if (res[i] != C_GREEN) win = false;
+  }
+
+  char line[17];
+  snprintf(line, sizeof(line), "Try %u:  %s", triesUsed, g);   // เลขเริ่ม column 9 ตรงกับ Result
+  lcdLine(0, line);
+  char pat[17] = "Result: ";
+  for (uint8_t i = 0; i &lt; 5; i++) pat[8 + i] = "-RYG"[res[i]];
+  pat[13] = '\0';
+  lcdLine(1, pat);
+
+  Serial.print(F("Guess ")); Serial.print(g);
+  Serial.print(F(" -&gt; ")); Serial.println(pat + 8);
+
+  if (win)                          endGame(true);
+  else if (triesUsed &gt;= MAX_TRIES)  endGame(false);
+  else                              seg.showNumberDec(MAX_TRIES - triesUsed);
+}
+
+void endGame(bool win) {
+  state     = win ? WON : LOST;
+  endAt     = millis();
+  lastBlink = endAt;
+  blinkOn   = false;
+  lcdFrame  = -1;
+  seg.setSegments(win ? SEG_GOOD : SEG_LOSE);
+  publishGame(win);
+  Serial.println(win ? F("*** WIN ***") : F("*** LOSE ***"));
+}
+
+// หน้าจอ LCD ตอนจบเกม: บรรทัดบนสลับข้อความ, บรรทัดล่างโชว์เฉลยค้างตลอด
+void drawEndFrame(int8_t f) {
+  if (state == WON) {
+    if (f == 0) lcdLine(0, " " HEART " YOU WIN!! " HEART);
+    else        lcdLine(0, STAR " YAY! (^o^)/ " STAR);
+  } else {
+    if (f == 0) lcdLine(0, " " SAD " GAME OVER " SAD);
+    else        lcdLine(0, " (T_T) " TEAR " oh no");
+  }
+  char line[17];
+  snprintf(line, sizeof(line), "Answer: %s %s", answer, state == WON ? SMILE : TEAR);
+  lcdLine(1, line);   // เลขเฉลยเริ่ม column 9 เหมือน Try / Result
+}
+
+// เรียกทุกรอบ loop: กะพริบไฟ + สลับหน้าจอ แบบไม่ใช้ delay
+void updateEndScreen() {
+  if (state == PLAYING) return;
+  unsigned long now = millis();
+  unsigned long t   = now - endAt;
+
+  int8_t f = (t / FRAME_MS) % 2;
+  if (f != lcdFrame) { lcdFrame = f; drawEndFrame(f); }
+
+  if (t &gt;= REVEAL_MS &amp;&amp; now - lastBlink &gt;= BLINK_MS) {
+    lastBlink = now;
+    blinkOn = !blinkOn;
+    if (state == WON) {
+      allLeds(blinkOn ? C_GREEN : C_OFF);
+      if (blinkOn) seg.setSegments(SEG_GOOD); else seg.clear();
+    } else {
+      allLeds(blinkOn ? C_RED : C_OFF);
+      if (blinkOn) seg.setSegments(SEG_LOSE); else seg.showNumberDec(0);
+    }
+  }
+
+  if (t &gt;= END_SCREEN_MS) newGame();
+}
+
+// =====================================================
+//                  ส่งสถิติไปเว็บ (JSON)
+// =====================================================
+void publishGame(bool win) {
+  String js;
+  js.reserve(700);
+  js += F("{\"uid\":\"");        js += gameUid;
+  js += F("\",\"result\":\"");   js += win ? "WIN" : "LOSE";
+  js += F("\",\"attempts\":");   js += triesUsed;
+  js += F(",\"maxAttempts\":");  js += MAX_TRIES;
+  js += F(",\"answer\":\"");     js += answer;
+  js += F("\",\"guesses\":[");
+  for (uint8_t t = 0; t &lt; triesUsed; t++) {
+    if (t) js += ',';
+    js += F("{\"number\":\"");   js += guessLog[t];
+    js += F("\",\"colors\":[");
+    for (uint8_t i = 0; i &lt; 5; i++) {
+      if (i) js += ',';
+      js += '"'; js += COLOR_NAME[colorLog[t][i]]; js += '"';
+    }
+    js += F("]}");
+  }
+  js += F("]}");
+
+  if (mqttClient.connected()) {
+    // retain = true -&gt; เปิดเว็บทีหลังก็ยังได้ผลเกมล่าสุด (เว็บกันซ้ำด้วย uid)
+    mqttClient.beginMessage(TOPIC_GAME, (unsigned long)js.length(), true, 1);
+    mqttClient.print(js);
+    mqttClient.endMessage();
+    Serial.print(F("Published: ")); Serial.println(js);
+  } else {
+    Serial.println(F("MQTT not connected - stats not sent"));
+  }
+}
+
+// =====================================================
+//                   รับข้อความ MQTT
+// =====================================================
+bool isFiveDigits(const char *s) {
+  if (strlen(s) != 5) return false;
+  for (uint8_t i = 0; i &lt; 5; i++) if (!isdigit((unsigned char)s[i])) return false;
+  return true;
+}
+
+void onMqttMessage(int messageSize) {
+  String topic = mqttClient.messageTopic();
+
+  char msg[24];
+  int n = 0;
+  while (mqttClient.available()) {
+    char c = (char)mqttClient.read();
+    if (n &lt; (int)sizeof(msg) - 1) msg[n++] = c;
+  }
+  msg[n] = '\0';
+
+  // ตัดช่องว่าง / ขึ้นบรรทัด หัว-ท้าย
+  char *p = msg;
+  while (*p &amp;&amp; isspace((unsigned char)*p)) p++;
+  int len = strlen(p);
+  while (len &gt; 0 &amp;&amp; isspace((unsigned char)p[len - 1])) p[--len] = '\0';
+
+  Serial.print(F("MQTT [")); Serial.print(topic); Serial.print(F("] ")); Serial.println(p);
+
+  if (topic == TOPIC_TYPING) {          // โชว์เลขที่กำลังพิมพ์
+    if (state == PLAYING) {
+      char line[17];
+      snprintf(line, sizeof(line), " Input: %s", p);
+      lcdLine(1, line);
+    }
+    return;
+  }
+  if (topic != TOPIC_GUESS) return;
+
+  // คำสั่งเริ่มเกมใหม่: "NEW" หรือ "*"
+  if (!strcmp(p, "NEW") || !strcmp(p, "new") || !strcmp(p, "*")) { newGame(); return; }
+
+  if (state != PLAYING) {
+    Serial.println(F("Game ended - waiting for new game"));
+    return;
+  }
+
+  if (!isFiveDigits(p)) {
+    lcdLine(0, " Oops! " SAD " 5 digit");
+    char line[17];
+    snprintf(line, sizeof(line), " got: %s", p);
+    lcdLine(1, line);
+    return;
+  }
+
+  handleGuess(p);
+}
+
+// =====================================================
+//                 เชื่อมต่อ WiFi / MQTT
+// =====================================================
+void connectWiFi() {
+  if (WiFi.status() == WL_CONNECTED) return;
+  Serial.print(F("Connecting WiFi"));
+  while (WiFi.begin(WIFI_SSID, WIFI_PASS) != WL_CONNECTED) {
+    Serial.print('.');
+    delay(3000);
+  }
+  while (WiFi.localIP()[0] == 0) delay(200);   // รอให้ได้ IP จริง
+  Serial.print(F("\nWiFi OK, IP: "));
+  Serial.println(WiFi.localIP());
+}
+
+bool connectMQTT() {
+  char id[24];
+  snprintf(id, sizeof(id), "guessnum-rx-%04lX", (unsigned long)random(0xFFFF));
+  mqttClient.setId(id);
+  Serial.print(F("Connecting MQTT... "));
+  if (!mqttClient.connect(MQTT_BROKER, MQTT_PORT)) {
+    Serial.print(F("failed, code "));
+    Serial.println(mqttClient.connectError());
+    return false;
+  }
+  mqttClient.onMessage(onMqttMessage);
+  mqttClient.subscribe(TOPIC_GUESS, 1);
+  mqttClient.subscribe(TOPIC_TYPING, 0);
+  Serial.print(F("OK, subscribed: "));
+  Serial.println(TOPIC_GUESS);
+  return true;
+}
+
+// =====================================================
+void setup() {
+  Serial.begin(115200);
+
+  for (uint8_t i = 0; i &lt; 5; i++)
+    for (uint8_t j = 0; j &lt; 3; j++) pinMode(LED_PIN[i][j], OUTPUT);
+  allLeds(C_OFF);
+
+  seg.setBrightness(5);
+  seg.clear();
+
+  lcd.init();
+  lcd.backlight();
+  lcd.createChar(1, chHeart);
+  lcd.createChar(2, chSmile);
+  lcd.createChar(3, chSad);
+  lcd.createChar(4, chStar);
+  lcd.createChar(5, chNote);
+  lcd.createChar(6, chTear);
+
+  lcdLine(0, " " HEART " GUESSNUM " HEART);
+  lcdLine(1, " WiFi...");
+  connectWiFi();
+
+  lcdLine(1, " MQTT...");
+  randomSeed(analogRead(A3) * 31UL + micros());
+  while (!connectMQTT()) delay(3000);
+
+  newGame();
+}
+
+void loop() {
+  if (WiFi.status() != WL_CONNECTED) connectWiFi();
+
+  if (!mqttClient.connected()) {
+    static unsigned long lastTry = 0;
+    if (millis() - lastTry &gt; 5000) { lastTry = millis(); connectMQTT(); }
+  } else {
+    mqttClient.poll();
+  }
+
+  updateEndScreen();
+}</code></pre>
+      </div>
+    </div>
+
+    <div class="code-pane" id="pane-kp">
+      <p class="code-desc">บอร์ดฝั่งส่ง: สแกนปุ่ม, debounce, ส่งเลขผ่าน MQTT พร้อมแสดงสถานะบน LED matrix</p>
+      <div class="code-box">
+        <div class="code-head">
+          <span class="dots"><i style="background:#ff5f57"></i><i style="background:#febc2e"></i><i style="background:#28c840"></i></span>
+          <span class="fname">GUESSNUM_sender/GUESSNUM_sender.ino</span>
+          <span class="act"><button data-copy="code-kp">Copy</button><a href="GUESSNUM_sender/GUESSNUM_sender.ino" download>Download</a></span>
+        </div>
+        <pre class="language-cpp"><code class="language-cpp" id="code-kp">/*
+  ===========================================================
+   GUESSNUM – บอร์ดฝั่งส่ง (Arduino UNO R4 WiFi)
+  -----------------------------------------------------------
+   ปุ่ม 4x4
+     0-9 : พิมพ์เลข (สูงสุด 5 หลัก)
+     *   : ลบตัวท้าย
+     #   : ส่งคำตอบ (ต้องครบ 5 หลัก)
+     C   : ล้างที่พิมพ์ทั้งหมด
+     A   : เริ่มเกมใหม่ (ส่ง "NEW")
+   ส่งเลขไปที่ MQTT ให้บอร์ดฝั่งรับ + ส่งเลขที่กำลังพิมพ์ให้โชว์บน LCD
+   ใช้ LED matrix บนบอร์ด R4 WiFi บอกว่าพิมพ์ไปกี่หลักแล้ว
+  -----------------------------------------------------------
+   ไลบรารีที่ต้องลง
+   - ArduinoMqttClient  (by Arduino)
+   * ไม่ใช้ Keypad.h แล้ว (เขียนตัวสแกนเอง กันเลขขึ้นมั่วบน R4)
+   * WiFiS3 และ Arduino_LED_Matrix มากับบอร์ด UNO R4 WiFi อยู่แล้ว
+  ===========================================================
+*/
+
+#include &lt;WiFiS3.h&gt;
+#include &lt;ArduinoMqttClient.h&gt;
+#include "Arduino_LED_Matrix.h"
+
+// ================= ตั้งค่า WiFi / MQTT (ให้ตรงกับบอร์ดฝั่งรับ) =================
+const char WIFI_SSID[]   = "YOUR_WIFI_NAME";
+const char WIFI_PASS[]   = "YOUR_WIFI_PASSWORD";
+const char MQTT_BROKER[] = "mqtt-dashboard.com";
+const int  MQTT_PORT     = 1883;
+
+#define TOPIC_BASE "r2n"                  // ต้องตรงกับบอร์ดฝั่งรับและเว็บ
+const char TOPIC_GUESS[]  = TOPIC_BASE "/guess";    // "12345" หรือ "NEW"
+const char TOPIC_TYPING[] = TOPIC_BASE "/typing";   // "123__" เลขที่กำลังพิมพ์
+
+// ================= Keypad 4x4 =================
+const byte ROWS = 4, COLS = 4;
+char keys[ROWS][COLS] = {
+  {'1', '2', '3', 'A'},
+  {'4', '5', '6', 'B'},
+  {'7', '8', '9', 'C'},
+  {'*', '0', '#', 'D'}
+};
+const uint8_t rowPins[ROWS] = {10, 8, 7, 6};   // R1-R4 (INPUT_PULLUP)
+const uint8_t colPins[COLS] = {5, 4, 3, 2};   // C1-C4 (เปิดทีละตัวด้วย LOW)
+// ถ้ากดแล้วได้ปุ่มผิดตำแหน่ง ให้สลับลำดับใน rowPins / colPins
+
+const unsigned int  SETTLE_US   = 20;   // รอให้สายนิ่งหลังเปิด/ปิด column
+const unsigned long DEBOUNCE_MS = 30;   // ค่าต้องนิ่งต่อเนื่องกี่ ms ถึงยอมรับ
+const char KEY_NONE  = 0;
+const char KEY_MULTI = '?';             // กดหลายปุ่มพร้อมกัน -&gt; ไม่รับ
+
+// ================= LED Matrix (12x8 บนบอร์ด) =================
+ArduinoLEDMatrix matrix;
+uint8_t frame[8][12];
+
+const char *ICON_CHECK[8] = {
+  "............",
+  "..........X.",
+  ".........X..",
+  "........X...",
+  "..X....X....",
+  "...X..X.....",
+  "....XX......",
+  "............"
+};
+const char *ICON_CROSS[8] = {
+  "............",
+  "...X....X...",
+  "....X..X....",
+  ".....XX.....",
+  ".....XX.....",
+  "....X..X....",
+  "...X....X...",
+  "............"
+};
+const char *ICON_HEART[8] = {
+  "............",
+  "...XX..XX...",
+  "..XXXXXXXX..",
+  "..XXXXXXXX..",
+  "...XXXXXX...",
+  "....XXXX....",
+  ".....XX.....",
+  "............"
+};
+
+// ================= สถานะ =================
+char    input[6] = "";
+uint8_t len = 0;
+
+WiFiClient wifiClient;
+MqttClient mqttClient(wifiClient);
+
+// =====================================================
+//               ตัวสแกน Keypad (แทน Keypad.h)
+// =====================================================
+void keypadBegin() {
+  for (uint8_t r = 0; r &lt; ROWS; r++) pinMode(rowPins[r], INPUT_PULLUP);
+  for (uint8_t c = 0; c &lt; COLS; c++) pinMode(colPins[c], INPUT);   // column ที่ไม่ได้ใช้ = ลอย
+}
+
+// สแกน 1 รอบ: คืนค่าปุ่มที่กด, KEY_NONE ถ้าไม่กด, KEY_MULTI ถ้ากดหลายปุ่ม
+char scanRaw() {
+  char found = KEY_NONE;
+  uint8_t count = 0;
+
+  for (uint8_t c = 0; c &lt; COLS; c++) {
+    // เปิด column นี้ด้วย LOW
+    pinMode(colPins[c], OUTPUT);
+    digitalWrite(colPins[c], LOW);
+    delayMicroseconds(SETTLE_US);            // รอสายนิ่งก่อนอ่าน
+
+    for (uint8_t r = 0; r &lt; ROWS; r++) {
+      if (digitalRead(rowPins[r]) == LOW) {
+        found = keys[r][c];
+        count++;
+      }
+    }
+
+    // ปิด column: ดัน HIGH สั้น ๆ ให้สาย row ชาร์จกลับเร็ว แล้วปล่อยลอย
+    digitalWrite(colPins[c], HIGH);
+    delayMicroseconds(2);
+    pinMode(colPins[c], INPUT);
+    delayMicroseconds(SETTLE_US);            // รอก่อนไป column ถัดไป
+  }
+
+  if (count &gt; 1) return KEY_MULTI;           // กัน ghost key
+  return found;
+}
+
+// คืนค่าปุ่ม "เฉพาะตอนเริ่มกด" หลัง debounce แล้ว (กดค้างไม่รันซ้ำ)
+char getKey() {
+  static char lastRaw = KEY_NONE;
+  static char stable  = KEY_NONE;
+  static unsigned long changedAt = 0;
+
+  char raw = scanRaw();
+  if (raw != lastRaw) {                      // ค่าเปลี่ยน -&gt; เริ่มจับเวลาใหม่
+    lastRaw = raw;
+    changedAt = millis();
+    return KEY_NONE;
+  }
+
+  if (millis() - changedAt &gt;= DEBOUNCE_MS &amp;&amp; raw != stable) {
+    stable = raw;                            // นิ่งครบ 30 ms แล้ว
+    if (stable != KEY_NONE &amp;&amp; stable != KEY_MULTI) return stable;
+  }
+  return KEY_NONE;
+}
+
+// =====================================================
+//                   LED Matrix
+// =====================================================
+void drawIcon(const char *icon[8]) {
+  for (uint8_t y = 0; y &lt; 8; y++)
+    for (uint8_t x = 0; x &lt; 12; x++)
+      frame[y][x] = (icon[y][x] == 'X');
+  matrix.renderBitmap(frame, 8, 12);
+}
+
+// ช่อง 5 ช่อง: พิมพ์แล้ว = แท่งเต็ม, ยังไม่พิมพ์ = ขีดล่าง
+void showInput() {
+  memset(frame, 0, sizeof(frame));
+  for (uint8_t i = 0; i &lt; 5; i++) {
+    uint8_t x = 1 + i * 2;
+    if (i &lt; len) for (uint8_t y = 2; y &lt;= 6; y++) frame[y][x] = 1;
+    else         frame[6][x] = 1;
+  }
+  matrix.renderBitmap(frame, 8, 12);
+}
+
+void flashIcon(const char *icon[8], unsigned long ms) {
+  drawIcon(icon);
+  delay(ms);
+  showInput();
+}
+
+// =====================================================
+//                      MQTT
+// =====================================================
+bool publishText(const char *topic, const char *text, uint8_t qos) {
+  if (!mqttClient.connected()) {
+    Serial.println(F("MQTT not connected!"));
+    return false;
+  }
+  mqttClient.beginMessage(topic, (unsigned long)strlen(text), false, qos);
+  mqttClient.print(text);
+  mqttClient.endMessage();
+  return true;
+}
+
+// ส่งเลขที่กำลังพิมพ์ให้บอร์ดฝั่งรับโชว์บน LCD เช่น "123__"
+void sendTyping() {
+  char buf[6];
+  for (uint8_t i = 0; i &lt; 5; i++) buf[i] = (i &lt; len) ? input[i] : '_';
+  buf[5] = '\0';
+  publishText(TOPIC_TYPING, buf, 0);
+}
+
+void clearInput() {
+  len = 0;
+  input[0] = '\0';
+}
+
+// =====================================================
+//                   จัดการปุ่ม
+// =====================================================
+void handleKey(char k) {
+  Serial.print(F("Key: ")); Serial.println(k);
+
+  if (k &gt;= '0' &amp;&amp; k &lt;= '9') {                 // พิมพ์เลข
+    if (len &lt; 5) {
+      input[len++] = k;
+      input[len] = '\0';
+      showInput();
+      sendTyping();
+    } else {
+      flashIcon(ICON_CROSS, 300);             // ครบ 5 หลักแล้ว
+    }
+  }
+  else if (k == '*') {                        // ลบตัวท้าย
+    if (len &gt; 0) input[--len] = '\0';
+    showInput();
+    sendTyping();
+  }
+  else if (k == 'C') {                        // ล้างทั้งหมด
+    clearInput();
+    showInput();
+    sendTyping();
+  }
+  else if (k == '#') {                        // ส่งคำตอบ
+    if (len == 5 &amp;&amp; publishText(TOPIC_GUESS, input, 1)) {
+      Serial.print(F("Sent guess: ")); Serial.println(input);
+      clearInput();
+      flashIcon(ICON_CHECK, 600);
+      // ไม่ส่ง typing ตรงนี้ เพื่อให้ LCD ฝั่งรับโชว์ผลการทายค้างไว้
+    } else {
+      flashIcon(ICON_CROSS, 500);             // ยังไม่ครบ 5 หลัก / ส่งไม่ได้
+    }
+  }
+  else if (k == 'A') {                        // เริ่มเกมใหม่
+    if (publishText(TOPIC_GUESS, "NEW", 1)) {
+      Serial.println(F("Sent NEW"));
+      clearInput();
+      flashIcon(ICON_HEART, 800);
+    } else {
+      flashIcon(ICON_CROSS, 500);
+    }
+  }
+  // B, D ไม่ได้ใช้
+}
+
+// =====================================================
+//                 เชื่อมต่อ WiFi / MQTT
+// =====================================================
+void connectWiFi() {
+  if (WiFi.status() == WL_CONNECTED) return;
+  drawIcon(ICON_CROSS);
+  Serial.print(F("Connecting WiFi"));
+  while (WiFi.begin(WIFI_SSID, WIFI_PASS) != WL_CONNECTED) {
+    Serial.print('.');
+    delay(3000);
+  }
+  while (WiFi.localIP()[0] == 0) delay(200);
+  Serial.print(F("\nWiFi OK, IP: "));
+  Serial.println(WiFi.localIP());
+}
+
+bool connectMQTT() {
+  char id[24];
+  snprintf(id, sizeof(id), "guessnum-kp-%04lX", (unsigned long)random(0xFFFF));
+  mqttClient.setId(id);
+  Serial.print(F("Connecting MQTT... "));
+  if (!mqttClient.connect(MQTT_BROKER, MQTT_PORT)) {
+    Serial.print(F("failed, code "));
+    Serial.println(mqttClient.connectError());
+    return false;
+  }
+  Serial.println(F("OK"));
+  return true;
+}
+
+// =====================================================
+void setup() {
+  Serial.begin(115200);
+  keypadBegin();
+  matrix.begin();
+
+  connectWiFi();
+  randomSeed(micros());
+  while (!connectMQTT()) delay(3000);
+
+  flashIcon(ICON_HEART, 1000);   // พร้อมเล่น
+}
+
+void loop() {
+  if (WiFi.status() != WL_CONNECTED) connectWiFi();
+
+  if (!mqttClient.connected()) {
+    static unsigned long lastTry = 0;
+    if (millis() - lastTry &gt; 5000) {
+      lastTry = millis();
+      drawIcon(ICON_CROSS);
+      if (connectMQTT()) showInput();
+    }
+  } else {
+    mqttClient.poll();   // รักษาการเชื่อมต่อ
+  }
+
+  char k = getKey();
+  if (k) handleKey(k);
+}</code></pre>
+      </div>
+    </div>
+
+    <div class="code-pane" id="pane-web">
+      <p class="code-desc">รับผลเกมผ่าน MQTT over WebSocket แล้วแสดงสถิติและประวัติการทาย</p>
+      <div class="code-box">
+        <div class="code-head">
+          <span class="dots"><i style="background:#ff5f57"></i><i style="background:#febc2e"></i><i style="background:#28c840"></i></span>
+          <span class="fname">dashboard/index.html</span>
+          <span class="act"><button data-copy="code-web">Copy</button><a href="dashboard/index.html" download>Download</a></span>
+        </div>
+        <pre class="language-markup"><code class="language-markup" id="code-web">&lt;!DOCTYPE html&gt;
+&lt;html lang="en"&gt;
+&lt;head&gt;
+  &lt;meta charset="UTF-8" /&gt;
+  &lt;meta name="viewport" content="width=device-width, initial-scale=1.0" /&gt;
+  &lt;title&gt;GUESSNUM Dashboard&lt;/title&gt;
+
+  &lt;style&gt;
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: Arial, sans-serif;
+    }
+
+    body {
+      background: #f4f5f7;
+      color: #222;
+      padding: 30px;
+    }
+
+    .container {
+      max-width: 1000px;
+      margin: auto;
+    }
+
+    h1 {
+      margin-bottom: 6px;
+    }
+
+    .subtitle {
+      color: #777;
+      margin-bottom: 25px;
+    }
+
+    .card {
+      background: white;
+      border-radius: 16px;
+      padding: 24px;
+      margin-bottom: 20px;
+      box-shadow: 0 4px 18px rgba(0,0,0,0.06);
+    }
+
+    .latest {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+
+    .result {
+      font-size: 32px;
+      font-weight: bold;
+      color: #2e9d58;
+      margin: 10px 0;
+    }
+
+    .answer {
+      font-size: 30px;
+      letter-spacing: 8px;
+      font-weight: bold;
+      margin-top: 10px;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 15px;
+    }
+
+    .stat-box {
+      background: #f8f8f8;
+      padding: 18px;
+      border-radius: 12px;
+      text-align: center;
+    }
+
+    .stat-box h3 {
+      font-size: 28px;
+      margin-bottom: 5px;
+    }
+
+    .stat-box p {
+      color: #777;
+      font-size: 14px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 15px;
+    }
+
+    th,
+    td {
+      padding: 14px;
+      border-bottom: 1px solid #eee;
+      text-align: left;
+    }
+
+    th {
+      color: #666;
+    }
+
+    .win {
+      color: #2e9d58;
+      font-weight: bold;
+    }
+
+    .lose {
+      color: #d84a4a;
+      font-weight: bold;
+    }
+
+    .guess-row {
+      display: flex;
+      gap: 8px;
+      margin: 10px 0;
+      align-items: center;
+    }
+
+    .digit {
+      width: 42px;
+      height: 42px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 8px;
+      font-weight: bold;
+      color: white;
+    }
+
+    .green {
+      background: #4caf50;
+    }
+
+    .yellow {
+      background: #d6ad21;
+    }
+
+    .red {
+      background: #d9534f;
+    }
+
+    .game-detail {
+      display: none;
+      margin-top: 20px;
+      padding-top: 20px;
+      border-top: 1px solid #ddd;
+    }
+
+    button {
+      background: #222;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 9px 14px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      opacity: 0.85;
+    }
+
+    /* ---- เพิ่ม: สถานะ MQTT + หัวการ์ด History ---- */
+    #mqttStatus {
+      font-size: 13px;
+      margin-left: 8px;
+      color: #d6ad21;
+    }
+
+    .card-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    @media (max-width: 700px) {
+      .latest,
+      .stats {
+        grid-template-columns: 1fr;
+      }
+
+      body {
+        padding: 15px;
+      }
+    }
+  &lt;/style&gt;
+&lt;/head&gt;
+
+&lt;body&gt;
+
+&lt;div class="container"&gt;
+
+  &lt;h1&gt;GUESSNUM&lt;/h1&gt;
+  &lt;p class="subtitle"&gt;
+    Physical Number Guessing Game Dashboard
+    &lt;span id="mqttStatus"&gt;● connecting...&lt;/span&gt;
+  &lt;/p&gt;
+
+  &lt;!-- Latest Game --&gt;
+  &lt;div class="card"&gt;
+
+    &lt;h2&gt;Latest Game&lt;/h2&gt;
+
+    &lt;div class="latest"&gt;
+
+      &lt;div&gt;
+        &lt;p&gt;Result&lt;/p&gt;
+        &lt;div class="result" id="latestResult"&gt;-&lt;/div&gt;
+
+        &lt;p&gt;Attempts Used&lt;/p&gt;
+        &lt;h3 id="latestAttempts"&gt;-&lt;/h3&gt;
+      &lt;/div&gt;
+
+      &lt;div&gt;
+        &lt;p&gt;Correct Answer&lt;/p&gt;
+        &lt;div class="answer" id="latestAnswer"&gt;-----&lt;/div&gt;
+      &lt;/div&gt;
+
+    &lt;/div&gt;
+
+  &lt;/div&gt;
+
+
+  &lt;!-- Statistics --&gt;
+  &lt;div class="card"&gt;
+
+    &lt;h2&gt;Game Statistics&lt;/h2&gt;
+
+    &lt;div class="stats"&gt;
+
+      &lt;div class="stat-box"&gt;
+        &lt;h3 id="totalGames"&gt;0&lt;/h3&gt;
+        &lt;p&gt;Games Played&lt;/p&gt;
+      &lt;/div&gt;
+
+      &lt;div class="stat-box"&gt;
+        &lt;h3 id="wins"&gt;0&lt;/h3&gt;
+        &lt;p&gt;Wins&lt;/p&gt;
+      &lt;/div&gt;
+
+      &lt;div class="stat-box"&gt;
+        &lt;h3 id="losses"&gt;0&lt;/h3&gt;
+        &lt;p&gt;Losses&lt;/p&gt;
+      &lt;/div&gt;
+
+      &lt;div class="stat-box"&gt;
+        &lt;h3 id="winRate"&gt;0%&lt;/h3&gt;
+        &lt;p&gt;Win Rate&lt;/p&gt;
+      &lt;/div&gt;
+
+    &lt;/div&gt;
+
+  &lt;/div&gt;
+
+
+  &lt;!-- History --&gt;
+  &lt;div class="card"&gt;
+
+    &lt;div class="card-head"&gt;
+      &lt;h2&gt;Game History&lt;/h2&gt;
+      &lt;button onclick="clearHistory()"&gt;Clear&lt;/button&gt;
+    &lt;/div&gt;
+
+    &lt;table&gt;
+
+      &lt;thead&gt;
+        &lt;tr&gt;
+          &lt;th&gt;Game&lt;/th&gt;
+          &lt;th&gt;Result&lt;/th&gt;
+          &lt;th&gt;Attempts&lt;/th&gt;
+          &lt;th&gt;Answer&lt;/th&gt;
+          &lt;th&gt;Detail&lt;/th&gt;
+        &lt;/tr&gt;
+      &lt;/thead&gt;
+
+      &lt;tbody id="historyTable"&gt;
+      &lt;/tbody&gt;
+
+    &lt;/table&gt;
+
+
+    &lt;!-- Game Detail --&gt;
+    &lt;div id="gameDetail" class="game-detail"&gt;
+
+      &lt;h3&gt;Game Detail&lt;/h3&gt;
+
+      &lt;p&gt;
+        Answer:
+        &lt;strong id="detailAnswer"&gt;&lt;/strong&gt;
+      &lt;/p&gt;
+
+      &lt;div id="guessHistory"&gt;&lt;/div&gt;
+
+    &lt;/div&gt;
+
+  &lt;/div&gt;
+
+&lt;/div&gt;
+
+
+&lt;!-- MQTT over WebSocket --&gt;
+&lt;script src="https://unpkg.com/mqtt@5/dist/mqtt.min.js"&gt;&lt;/script&gt;
+
+&lt;script&gt;
+
+// ------------------------------
+// MQTT Settings (ต้องตรงกับ TOPIC_BASE ในโค้ด Arduino)
+// ------------------------------
+
+const MQTT_URL   = "wss://mqtt-dashboard.com:8884/mqtt";
+const TOPIC_GAME = "r2n/game";
+
+const STORAGE_KEY = "numdle_games";
+const SEEN_KEY    = "numdle_seen";
+
+
+// ------------------------------
+// Load / Save (เก็บประวัติไว้ในเบราว์เซอร์)
+// ------------------------------
+
+function loadJSON(key) {
+  try { return JSON.parse(localStorage.getItem(key)) || []; }
+  catch (e) { return []; }
+}
+
+function saveJSON(key, value) {
+  try { localStorage.setItem(key, JSON.stringify(value)); }
+  catch (e) {}
+}
+
+let games = loadJSON(STORAGE_KEY);
+let seen  = loadJSON(SEEN_KEY);
+
+
+// ------------------------------
+// Render Latest Game
+// ------------------------------
+
+function renderLatest() {
+
+  const g = games[0];
+  const resultEl = document.getElementById("latestResult");
+
+  if (!g) {
+    resultEl.textContent = "-";
+    document.getElementById("latestAttempts").textContent = "-";
+    document.getElementById("latestAnswer").textContent = "-----";
+    return;
+  }
+
+  resultEl.textContent = g.result;
+  resultEl.style.color = g.result === "WIN" ? "#2e9d58" : "#d84a4a";
+
+  document.getElementById("latestAttempts").textContent =
+    `${g.attempts} / ${g.maxAttempts || 5}`;
+
+  document.getElementById("latestAnswer").textContent = g.answer;
+
+}
+
+
+// ------------------------------
+// Render History
+// ------------------------------
+
+const table = document.getElementById("historyTable");
+
+function renderHistory() {
+
+  table.innerHTML = "";
+
+  games.forEach(game =&gt; {
+
+    const row = document.createElement("tr");
+
+    row.innerHTML = `
+      &lt;td&gt;#${game.id}&lt;/td&gt;
+
+      &lt;td class="${game.result === "WIN" ? "win" : "lose"}"&gt;
+        ${game.result}
+      &lt;/td&gt;
+
+      &lt;td&gt;${game.attempts} / ${game.maxAttempts || 5}&lt;/td&gt;
+
+      &lt;td&gt;${game.answer}&lt;/td&gt;
+
+      &lt;td&gt;
+        &lt;button onclick="showGame(${game.id})"&gt;
+          View
+        &lt;/button&gt;
+      &lt;/td&gt;
+    `;
+
+    table.appendChild(row);
+
+  });
+
+}
+
+
+// ------------------------------
+// Show Game Detail
+// ------------------------------
+
+function showGame(id) {
+
+  const game = games.find(g =&gt; g.id === id);
+
+  document.getElementById("gameDetail").style.display = "block";
+
+  document.getElementById("detailAnswer").textContent =
+    game.answer;
+
+  const container =
+    document.getElementById("guessHistory");
+
+  container.innerHTML = "";
+
+  game.guesses.forEach((guess, index) =&gt; {
+
+    const row = document.createElement("div");
+
+    row.className = "guess-row";
+
+    const label = document.createElement("span");
+
+    label.textContent = `Guess ${index + 1}:`;
+
+    row.appendChild(label);
+
+    for(let i = 0; i &lt; 5; i++) {
+
+      const box = document.createElement("div");
+
+      box.className =
+        `digit ${guess.colors[i]}`;
+
+      box.textContent =
+        guess.number[i];
+
+      row.appendChild(box);
+
+    }
+
+    container.appendChild(row);
+
+  });
+
+}
+
+
+// ------------------------------
+// Calculate Statistics
+// ------------------------------
+
+function updateStats(){
+
+  const total = games.length;
+
+  const wins =
+    games.filter(g =&gt; g.result === "WIN").length;
+
+  const losses =
+    total - wins;
+
+  const rate = total
+    ? ((wins / total) * 100).toFixed(1)
+    : "0";
+
+  document.getElementById("totalGames")
+    .textContent = total;
+
+  document.getElementById("wins")
+    .textContent = wins;
+
+  document.getElementById("losses")
+    .textContent = losses;
+
+  document.getElementById("winRate")
+    .textContent = rate + "%";
+
+}
+
+function renderAll() {
+  renderLatest();
+  renderHistory();
+  updateStats();
+}
+
+
+// ------------------------------
+// Add Game from Arduino
+// ------------------------------
+
+function addGame(data) {
+
+  if (!data || !data.answer) return;
+
+  // กันข้อมูลซ้ำ (retained message จะถูกส่งมาใหม่ทุกครั้งที่เปิดเว็บ)
+  if (data.uid &amp;&amp; seen.includes(data.uid)) return;
+
+  const nextId = games.length
+    ? Math.max(...games.map(g =&gt; g.id)) + 1
+    : 1;
+
+  games.unshift({
+    id: nextId,
+    uid: data.uid,
+    result: data.result,
+    attempts: data.attempts,
+    maxAttempts: data.maxAttempts || 5,
+    answer: data.answer,
+    guesses: data.guesses || []
+  });
+
+  if (data.uid) {
+    seen.push(data.uid);
+    seen = seen.slice(-300);
+    saveJSON(SEEN_KEY, seen);
+  }
+
+  saveJSON(STORAGE_KEY, games);
+  renderAll();
+
+}
+
+function clearHistory() {
+
+  if (!confirm("ลบประวัติการเล่นทั้งหมด?")) return;
+
+  games = [];
+  saveJSON(STORAGE_KEY, games);
+  document.getElementById("gameDetail").style.display = "none";
+  renderAll();
+
+}
+
+
+// ------------------------------
+// MQTT Connection
+// ------------------------------
+
+const statusEl = document.getElementById("mqttStatus");
+
+function setStatus(text, color) {
+  statusEl.textContent = "● " + text;
+  statusEl.style.color = color;
+}
+
+const client = mqtt.connect(MQTT_URL, {
+  clientId: "numdle-web-" + Math.random().toString(16).slice(2, 8)
+});
+
+client.on("connect", () =&gt; {
+  setStatus("online", "#2e9d58");
+  client.subscribe(TOPIC_GAME, { qos: 1 });
+});
+
+client.on("reconnect", () =&gt; setStatus("reconnecting...", "#d6ad21"));
+client.on("offline",   () =&gt; setStatus("offline", "#d84a4a"));
+client.on("error", err =&gt; console.error("MQTT error:", err));
+
+client.on("message", (topic, payload) =&gt; {
+  try {
+    addGame(JSON.parse(payload.toString()));
+  } catch (e) {
+    console.warn("Bad message:", payload.toString());
+  }
+});
+
+renderAll();
+
+&lt;/script&gt;
+
+&lt;/body&gt;
+&lt;/html&gt;</code></pre>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:18px">
+      <h3>ไลบรารีที่ใช้</h3>
+      <p>ArduinoMqttClient · LiquidCrystal I2C (Frank de Brabander) · TM1637 (Avishay Orpaz) · WiFiS3 · Arduino_LED_Matrix · MQTT.js</p>
+    </div>
+  </section>
+
+  <!-- ================= Team ================= -->
+  <section id="team">
+    <p class="eyebrow">Team</p>
+    <h2>สมาชิก</h2>
+    <!-- รูปสมาชิก: ใส่ไฟล์ไว้ที่ images/member1.jpg, member2.jpg, member3.jpg -->
+    <div class="grid g3">
+      <div class="card member">
+        <div class="avatar" style="background:var(--green)"><img src="images/member1.jpg" alt="" onerror="this.remove()">ช</div>
+        <p class="name">ชวัลรัตน์ ศรีรัตน์</p>
+        <p class="sid">68070028</p>
+      </div>
+      <div class="card member">
+        <div class="avatar" style="background:var(--yellow)"><img src="images/member2.jpg" alt="" onerror="this.remove()">ณ</div>
+        <p class="name">ณปภา ธุวสินธุ์</p>
+        <p class="sid">68070038</p>
+      </div>
+      <div class="card member">
+        <div class="avatar" style="background:var(--red)"><img src="images/member3.jpg" alt="" onerror="this.remove()">ธ</div>
+        <p class="name">ธันยพร เดชพันธ์</p>
+        <p class="sid">68070066</p>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  Physical Computing Project 2026 - IT KMITL<br>
+  Faculty of Information Technology, King Mongkut's Institute of Technology Ladkrabang
+</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-c.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-cpp.min.js"></script>
+
+<script>
+// ================= CONFIG (แก้ตรงนี้) =================
+const CONFIG = {
+  YOUTUBE_ID: "",                                   // เช่น "dQw4w9WgXcQ" จากลิงก์ youtu.be/xxxxxxxx
+  REPO_URL:   "https://github.com/USERNAME/REPO-NAME",
+  POSTER_URL: "poster/poster.pdf"
+};
+// ======================================================
+
+// ลิงก์
+document.getElementById("lnkPoster").href = CONFIG.POSTER_URL;
+const repo = document.getElementById("lnkRepo");
+if (CONFIG.REPO_URL.includes("USERNAME")) repo.classList.add("todo");
+repo.href = CONFIG.REPO_URL;
+
+// วิดีโอ YouTube
+if (CONFIG.YOUTUBE_ID) {
+  document.getElementById("videoBox").innerHTML =
+    `<iframe src="https://www.youtube.com/embed/${CONFIG.YOUTUBE_ID}" title="GUESSNUM demo"
+      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`;
+}
+
+// แท็บบทคัดย่อ
+document.querySelectorAll(".tabs button").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".tabs button").forEach(b => b.classList.toggle("on", b === btn));
+    document.querySelectorAll(".abstract p[data-lang]").forEach(p => p.hidden = p.dataset.lang !== btn.dataset.lang);
+  });
+});
+
+// แท็บ source code
+document.querySelectorAll(".code-tabs button").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".code-tabs button").forEach(b => b.classList.toggle("on", b === btn));
+    document.querySelectorAll(".code-pane").forEach(p => p.classList.toggle("on", p.id === "pane-" + btn.dataset.pane));
+  });
+});
+
+// ปุ่ม Copy
+document.querySelectorAll("[data-copy]").forEach(btn => {
+  btn.addEventListener("click", async () => {
+    const text = document.getElementById(btn.dataset.copy).textContent;
+    try {
+      await navigator.clipboard.writeText(text);
+      btn.textContent = "Copied ✓";
+    } catch (e) {
+      btn.textContent = "Copy failed";
+    }
+    setTimeout(() => btn.textContent = "Copy", 1500);
+  });
+});
+
+// ไทล์บนหัวเว็บ: เล่นตัวอย่างการทายวนไปเรื่อย ๆ
+const demo = [
+  { n: "12345", c: "yygry" },
+  { n: "58324", c: "ggggr" },
+  { n: "58321", c: "ggggg" }
+];
+const tiles = [...document.querySelectorAll("#heroTiles .tile")];
+let step = 0;
+function playDemo() {
+  const d = demo[step % demo.length];
+  tiles.forEach((t, i) => {
+    setTimeout(() => {
+      t.classList.remove("flip");
+      void t.offsetWidth;
+      t.classList.add("flip");
+      setTimeout(() => { t.className = "tile flip " + d.c[i]; t.textContent = d.n[i]; }, 250);
+    }, i * 140);
+  });
+  step++;
+}
+if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+  setTimeout(playDemo, 500);
+  setInterval(playDemo, 2600);
+} else {
+  tiles.forEach(t => t.classList.add("g"));
+}
+</script>
+
+</body>
+</html>

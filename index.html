@@ -186,9 +186,9 @@
     .mini { width: 36px; height: 36px; border-radius: 8px; display: grid; place-items: center; color: #fff; font-family: "Mitr", sans-serif; background: #cfc7b9; }
     .mini.g { background: var(--green); } .mini.y { background: var(--yellow); } .mini.r { background: var(--red); }
 
-    .keys { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; max-width: 260px; }
+    .keys { display: grid; grid-template-columns: repeat(4, 46px); grid-auto-rows: 46px; gap: 8px; flex: none; }
     .keys span {
-      aspect-ratio: 1; border-radius: 10px;
+      width: 46px; height: 46px; border-radius: 10px;
       display: grid; place-items: center;
       background: var(--bg); border: 1px solid var(--line);
       font-family: "Mitr", sans-serif; font-size: 18px;

@@ -8,7 +8,7 @@
 |---|---|
 | 🌐 Website | https://CodeRain49.github.io/GUESSNUM/ |
 | 📊 Dashboard สถิติ | https://CodeRain49.github.io/GUESSNUM/dashboard/ |
-| 🎬 วิดีโอสรุปโปรเจกต์ (YouTube) | https://youtu.be/XXXXXXXX |
+| 🎬 วิดีโอสรุปโปรเจกต์ (YouTube) | https://youtu.be/pbFXckE7n7M |
 | 🖼️ โปสเตอร์ A1 | [poster/poster.pdf](poster/poster.pdf) |
 
 ---
